@@ -69,7 +69,7 @@ void addVerticles(struct polygon* poly)
 	int i,x,y;
 	lluint buffer;
 	scanf("%llx", &buffer);
-	for(i=0; i<4; i++)
+	for(i=0; i < 4; i++)
 	{
 	x = extractCordinate(&buffer);
 	y = extractCordinate(&buffer);
@@ -135,20 +135,115 @@ void addToEndOfList(struct polygon* poly, listOfPoly* lst)
 
 void printPolyons(char *input,int size, listOfPoly* lst)
 {
-	char printAll = 0;
-	char printArea = 0;
-	char printShapeAndVerticles = 0;
-	char printPerimeter = 0;
+	char input[10];
+	int j = 0;
+	enum WHOM_TO_OUTPUT whomToPrint =  NONE;
 	for (int i = 0; i < size; i++)
 	{
 		if (input[i] != 'N' && input[i] != 'L')
 		{
 			switch (input[i])
 			{
-			case 'a':
+			case 'A':
+				whomToPrint = ALL_POLY;
+				break;
+			case 'C':
+				whomToPrint = CURRENT;
 			default:
+				input[j++] = input[i];
 				break;
 			}
 		}
 	}
+	input[j] = NULL;
+	printAccordingToFlags(input, whomToPrint,lst);
+}
+
+void printAccordingToFlags(char* input, enum WHOM_TO_OUTPUT whomToPrint, listOfPoly* lst)
+{
+	if (whomToPrint != NONE)
+	{
+		if (whomToPrint == CURRENT)
+		{
+			printpoly(input, lst->tail);
+		}
+		else 
+		{
+			struct Node* tmp = lst->head;
+
+			while (tmp != NULL)
+			{
+				printPoly( input, tmp);
+				tmp = tmp->next;
+			}
+		}
+	}
+}
+
+void printPoly(char* input , struct Node* currentNode)
+{
+	char* nameOfPoly;
+	int i = 0;
+	while (input[i]!=NULL)
+	{
+		switch (input[i])
+		{
+		case 'd':
+			print_polygon_name(currentNode->poly->poly_type, nameOfPoly);
+			printVerticles(currentNode->poly->poly_type, currentNode->poly);
+				break;
+		case 'p':
+			calculateAndPrintPerimeter(currentNode->poly->poly_type,currentNode->poly);
+			break;
+		case 'a':
+			calculateArea(currentNode->poly->poly_type, currentNode->poly);
+		default:
+			break;
+		}
+	}
+}
+
+printVerticles(enum POLY_TYPE poly_type,struct polygon* poly)
+{
+	int numOfVert = calcNumOfVerticles(poly_type);
+	
+	for (int i = 0; i < numOfVert; i++)
+	{
+		print_point(poly->vertices[i]);
+	}
+}
+
+int calcNumOfVerticles(enum POLY_TYPE poly_type)
+{
+	int numOfVert;
+	switch (poly_type)
+	{
+	case OCTAGON:
+		numOfVert = 8;
+		break;
+	case HEXAGON:
+		numOfVert = 6;
+		break;
+	default:
+		numOfVert = 4;
+	}
+	return numOfVert;
+}
+
+void calculateAndPrintPerimeter(enum POLY_TYPE poly_type, struct polygon* poly)
+{
+	int numOfVert = calcNumOfVerticles(poly_type);
+	double perimeter = 0;
+	for (int i = 0; i < numOfVert; i++)
+	{
+		if (i != numOfVert - 1)
+		{
+			perimeter+=calc_side(poly->vertices[i], poly->vertices[i + 1]);
+		}
+		else
+		{
+			perimeter += calc_side(poly->vertices[i], poly->vertices[0]);
+		}
+	}
+	prinf("perimeter = %lf\n", perimeter);
 }
