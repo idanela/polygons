@@ -1,0 +1,4 @@
+﻿  ex1_q1.c
+c:\users\user\desktop\os\ex1_q1\ex1_q1\ex1_q1.c(39): warning C4013: 'strlen' undefined; assuming extern returning int
+c:\users\user\desktop\os\ex1_q1\ex1_q1\ex1_q1.c(108): warning C4244: '=': conversion from 'unsigned __int64' to 'char', possible loss of data
+  ex1_q1.vcxproj -> C:\Users\User\Desktop\OS\ex1_q1\Debug\ex1_q1.exe

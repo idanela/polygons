@@ -1,14 +1,28 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include "ex1_q1.h"
-
 typedef struct
 {
 	struct Node* head;
 	struct Node* tail;
 }listOfPoly;
 
-char mask = 0xff;
-void addToEndOfList(struct polygon*, listOfPoly lst);
+lluint mask = 0x00ff;
+struct polygon* CreatePolygon(char kindOfPoly);
+void addVerticles(struct polygon* poly);
+char extractCordinate(lluint* pBuffer);
+fillTheRest(struct polygon* poly);
+struct Node* creatNode(struct polygon* poly);
+void addToEndOfList(struct polygon* poly, listOfPoly* lst);
+void printPolyons(char *input, int size, listOfPoly* lst);
+void printChosenOption(char* input, enum WHOM_TO_OUTPUT whomToPrint, listOfPoly* lst);
+void printPoly(char* input, struct Node* currentNode);
+printVerticles(enum POLY_TYPE poly_type, struct polygon* poly);
+int calcNumOfVerticles(enum POLY_TYPE poly_type);
+void calculateAndPrintPerimeter(enum POLY_TYPE poly_type, struct polygon* poly);
+void calculateAndPrintArea(enum POLY_TYPE poly_type, struct polygon* poly);
+void freeList(listOfPoly* lst);
+
+
 
 void main()
 {
@@ -39,6 +53,8 @@ void main()
 			break;
 		}
 	}
+
+	freeList(&lst);
 }
 
 
@@ -66,15 +82,15 @@ struct polygon* CreatePolygon(char kindOfPoly)
 
 void addVerticles(struct polygon* poly)
 {
-	int i,x,y;
+	char i,x,y;
 	lluint buffer;
 	scanf("%llx", &buffer);
-	for(i=0; i < 4; i++)
+	for(i = 0; i < 4; i++)
 	{
 	x = extractCordinate(&buffer);
 	y = extractCordinate(&buffer);
-	poly->vertices[i].x = x;
-	poly->vertices[i].y = y;;
+	poly->vertices[i].x = (int) x;
+	poly->vertices[i].y = (int) y;;
 	}
 
 	if (poly->poly_type != QUADRI)
@@ -83,21 +99,21 @@ void addVerticles(struct polygon* poly)
 	}
 }
 
-int extractCordinate(lluint* pBuffer)
+char extractCordinate(lluint* pBuffer)
 {
-	int x;
+	char x;
 	x = mask & *pBuffer;
-	*pBuffer = *pBuffer << 8;
+	*pBuffer=*pBuffer >> 8;
 	return x;
 }
 
 fillTheRest(struct polygon* poly)
 {
-	int i, x, y;
+	char i, x, y;
 	int numOfVerticels = 8;
 	lluint buffer;
-	scanf("%llu", buffer);
-	if (poly->poly_type = HEXAGON)
+	scanf("%llx", &buffer);
+	if (poly->poly_type == HEXAGON)
 	{
 		numOfVerticels = 6;
 	}
@@ -105,8 +121,8 @@ fillTheRest(struct polygon* poly)
 	{
 		x = extractCordinate(&buffer);
 		y = extractCordinate(&buffer);
-		poly->vertices[i].x = x;
-		poly->vertices[i].y = y;;
+		poly->vertices[i].x =(int) x;
+		poly->vertices[i].y = (int)y;;
 	}
 }
 
@@ -114,6 +130,7 @@ struct Node* creatNode(struct polygon* poly)
 {
 	struct Node* node;
 	node = (struct Node*)malloc(sizeof(struct Node));
+	node->poly = poly;
 	node->next = NULL;
 	return node;
 }
@@ -121,7 +138,7 @@ struct Node* creatNode(struct polygon* poly)
 void addToEndOfList(struct polygon* poly, listOfPoly* lst)
 {
 	struct Node* node = creatNode(poly);
-	if (lst->head = NULL)
+	if (lst->head == NULL)
 	{
 		lst->head = lst->tail = node;
 	}
@@ -135,12 +152,12 @@ void addToEndOfList(struct polygon* poly, listOfPoly* lst)
 
 void printPolyons(char *input,int size, listOfPoly* lst)
 {
-	char input[10];
+	char commands[10];
 	int j = 0;
 	enum WHOM_TO_OUTPUT whomToPrint =  NONE;
 	for (int i = 0; i < size; i++)
 	{
-		if (input[i] != 'N' && input[i] != 'L')
+		if (input[i] != 'N' && input[i] != 'L' &&input[i] != 'O' && input[i] != 'H' && input[i] != 'Q')
 		{
 			switch (input[i])
 			{
@@ -150,22 +167,23 @@ void printPolyons(char *input,int size, listOfPoly* lst)
 			case 'C':
 				whomToPrint = CURRENT;
 			default:
-				input[j++] = input[i];
+				commands[j++] = input[i];
 				break;
 			}
 		}
 	}
-	input[j] = NULL;
-	printAccordingToFlags(input, whomToPrint,lst);
+
+	commands[j] ='\0';
+	printChosenOption(commands, whomToPrint,lst);
 }
 
-void printAccordingToFlags(char* input, enum WHOM_TO_OUTPUT whomToPrint, listOfPoly* lst)
+void printChosenOption(char* input, enum WHOM_TO_OUTPUT whomToPrint, listOfPoly* lst)
 {
 	if (whomToPrint != NONE)
 	{
 		if (whomToPrint == CURRENT)
 		{
-			printpoly(input, lst->tail);
+			printPoly(input, lst->tail);
 		}
 		else 
 		{
@@ -184,22 +202,27 @@ void printPoly(char* input , struct Node* currentNode)
 {
 	char* nameOfPoly;
 	int i = 0;
-	while (input[i]!=NULL)
+	while (input[i]!='\0')
 	{
 		switch (input[i])
 		{
 		case 'd':
+			nameOfPoly = (char*)malloc(15);
 			print_polygon_name(currentNode->poly->poly_type, nameOfPoly);
+			printf("%s ", nameOfPoly);
+			free(nameOfPoly);
 			printVerticles(currentNode->poly->poly_type, currentNode->poly);
 				break;
 		case 'p':
 			calculateAndPrintPerimeter(currentNode->poly->poly_type,currentNode->poly);
 			break;
 		case 'a':
-			calculateArea(currentNode->poly->poly_type, currentNode->poly);
+			calculateAndPrintArea(currentNode->poly->poly_type, currentNode->poly);
 		default:
 			break;
 		}
+		
+		i++;
 	}
 }
 
@@ -211,6 +234,8 @@ printVerticles(enum POLY_TYPE poly_type,struct polygon* poly)
 	{
 		print_point(poly->vertices[i]);
 	}
+
+	printf("\n");
 }
 
 int calcNumOfVerticles(enum POLY_TYPE poly_type)
@@ -245,5 +270,37 @@ void calculateAndPrintPerimeter(enum POLY_TYPE poly_type, struct polygon* poly)
 			perimeter += calc_side(poly->vertices[i], poly->vertices[0]);
 		}
 	}
-	prinf("perimeter = %lf\n", perimeter);
+	printf("perimeter = %.1lf\n", perimeter);
+}
+
+void calculateAndPrintArea(enum POLY_TYPE poly_type, struct polygon* poly)
+{
+	double area = calc_triangle_area(poly->vertices[0], poly->vertices[1], poly->vertices[2]);
+	area += calc_triangle_area(poly->vertices[0], poly->vertices[2], poly->vertices[3]);
+
+	if (poly_type != QUADRI)
+	{
+		area += calc_triangle_area(poly->vertices[0], poly->vertices[3], poly->vertices[4]);
+		area += calc_triangle_area(poly->vertices[0], poly->vertices[4], poly->vertices[5]);
+	}
+	if (poly_type == OCTAGON)
+	{
+		area += calc_triangle_area(poly->vertices[0], poly->vertices[5], poly->vertices[6]);
+		area += calc_triangle_area(poly->vertices[0], poly->vertices[6], poly->vertices[7]);
+	}
+
+	printf("area = %.1lf\n", area);
+}
+
+void freeList(listOfPoly* lst)
+{
+	struct Node* tmp = lst->head;
+	struct Node* next;
+	while (tmp != NULL)
+	{
+		free(tmp->poly);
+		next = tmp->next;
+		free(tmp);
+		tmp = next;
+	}
 }
